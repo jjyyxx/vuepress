@@ -18,6 +18,7 @@
     "generator"
   ],
   "dependencies": {
+    "@vuepress/test-utils": "1.0.0-alpha.41",
     "markdown-it-container": "^2.0.0"
   },
   "author": "Shigma <1700011071@pku.edu.cn>",

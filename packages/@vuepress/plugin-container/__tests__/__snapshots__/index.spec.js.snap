@@ -1,0 +1,56 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`containers danger 1`] = `
+Object {
+  "data": Object {
+    "__data_block": Object {},
+  },
+  "dataBlockString": "",
+  "html": <p>::: danger I am a danger :::
+</p>,
+}
+`;
+
+exports[`containers tip 1`] = `
+Object {
+  "data": Object {
+    "__data_block": Object {},
+  },
+  "dataBlockString": "",
+  "html": <p>::: tip I am a tip :::
+</p>,
+}
+`;
+
+exports[`containers tip-override 1`] = `
+Object {
+  "data": Object {
+    "__data_block": Object {},
+  },
+  "dataBlockString": "",
+  "html": <p>::: tip 提示 I am a tip :::
+</p>,
+}
+`;
+
+exports[`containers v-pre 1`] = `
+Object {
+  "data": Object {
+    "__data_block": Object {},
+  },
+  "dataBlockString": "",
+  "html": <p>::: v-pre I am a v-pre :::
+</p>,
+}
+`;
+
+exports[`containers warning 1`] = `
+Object {
+  "data": Object {
+    "__data_block": Object {},
+  },
+  "dataBlockString": "",
+  "html": <p>::: warning I am a warning :::
+</p>,
+}
+`;
