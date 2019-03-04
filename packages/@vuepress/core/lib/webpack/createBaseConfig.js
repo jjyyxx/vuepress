@@ -58,8 +58,8 @@ module.exports = function createBaseConfig ({
       .set('@internal', path.resolve(tempPath, 'internal'))
       .end()
     .extensions
-      .merge(['.js', '.jsx', '.vue', '.json', '.styl'])
-      .end()
+    .merge(['.js', '.ts', '.jsx', /* , '.tsx' */ '.vue', '.json', '.styl']) // TODO: jsx and tsx?
+    .end()
     .modules
       .merge(modulePaths)
 
@@ -123,24 +123,8 @@ module.exports = function createBaseConfig ({
       .loader('pug-plain-loader')
       .end()
 
-  if (!siteConfig.evergreen) {
-    const libDir = path.join(__dirname, '..')
-    config.module
-      .rule('js')
-        .test(/\.js$/)
-        .exclude.add(filePath => {
-          // Always transpile lib directory
-          if (filePath.startsWith(libDir)) {
-            return false
-          }
-          // always transpile js in vue files
-          if (/\.vue\.js$/.test(filePath)) {
-            return false
-          }
-          // Don't transpile node_modules
-          return /node_modules/.test(filePath)
-        }).end()
-        .use('cache-loader')
+  function applyTranspilePipeline (rule) {
+    rule.use('cache-loader')
           .loader('cache-loader')
           .options({
             cacheDirectory,
@@ -159,6 +143,50 @@ module.exports = function createBaseConfig ({
               require.resolve('@vue/babel-preset-app')
             ]
           })
+  }
+
+  const tsRule = config.module
+    .rule('ts')
+      .test(/\.ts$/)
+
+  if (!siteConfig.evergreen) {
+    const libDir = path.join(__dirname, '..')
+    const jsRule = config.module
+      .rule('js')
+        .test(/\.js$/)
+        .exclude.add(filePath => {
+          // Always transpile lib directory
+          if (filePath.startsWith(libDir)) {
+            return false
+          }
+          // always transpile js in vue files
+          if (/\.vue\.js$/.test(filePath)) {
+            return false
+          }
+          // Don't transpile node_modules
+          return /node_modules/.test(filePath)
+        }).end()
+    applyTranspilePipeline(jsRule)
+    applyTranspilePipeline(tsRule)
+  }
+
+  const tsConfig = siteConfig.ts || {}
+  const { tsChecker = !!tsConfig.transpileOnly } = siteConfig
+
+  tsRule
+    .use('ts-loader')
+      .loader('ts-loader')
+      .options(Object.assign({
+        appendTsSuffixTo: [/\.vue$/]
+      }, tsConfig))
+
+  if (tsChecker) {
+    config
+      .plugin('fork-ts-checker')
+      .use(require('fork-ts-checker-webpack-plugin'), [Object.assign({
+        tsconfig: tsConfig.configFile || path.resolve(sourceDir, './tsconfig.json'),
+        vue: true
+      }, tsChecker)])
   }
 
   config.module
