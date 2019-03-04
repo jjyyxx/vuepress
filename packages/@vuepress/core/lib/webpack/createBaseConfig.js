@@ -124,25 +124,26 @@ module.exports = function createBaseConfig ({
       .end()
 
   function applyTranspilePipeline (rule) {
-    rule.use('cache-loader')
-          .loader('cache-loader')
-          .options({
-            cacheDirectory,
-            cacheIdentifier
-          })
-          .end()
-        .use('babel-loader')
-          .loader('babel-loader')
-          .options({
-            // do not pick local project babel config (.babelrc)
-            babelrc: false,
-            // do not pick local project babel config (babel.config.js)
-            // ref: http://babeljs.io/docs/en/config-files
-            configFile: false,
-            presets: [
-              require.resolve('@vue/babel-preset-app')
-            ]
-          })
+    rule
+      .use('cache-loader')
+        .loader('cache-loader')
+        .options({
+          cacheDirectory,
+          cacheIdentifier
+        })
+        .end()
+      .use('babel-loader')
+        .loader('babel-loader')
+        .options({
+          // do not pick local project babel config (.babelrc)
+          babelrc: false,
+          // do not pick local project babel config (babel.config.js)
+          // ref: http://babeljs.io/docs/en/config-files
+          configFile: false,
+          presets: [
+            require.resolve('@vue/babel-preset-app')
+          ]
+        })
   }
 
   const tsRule = config.module
@@ -170,21 +171,31 @@ module.exports = function createBaseConfig ({
     applyTranspilePipeline(tsRule)
   }
 
-  const tsConfig = siteConfig.ts || {}
-  const { tsChecker = !!tsConfig.transpileOnly } = siteConfig
+  const tsOptions = {
+    transpileOnly: isProd && !!env.isDebug,
+    ...siteConfig.ts
+  }
+  const { compilerOptions = {}} = tsOptions
+  delete tsOptions.compilerOptions
 
   tsRule
     .use('ts-loader')
       .loader('ts-loader')
-      .options(Object.assign({
-        appendTsSuffixTo: [/\.vue$/]
-      }, tsConfig))
+      .options({
+        appendTsSuffixTo: [/\.vue$/],
+        compilerOptions: {
+          module: 'esnext',
+          ...compilerOptions
+        },
+        ...tsOptions
+      })
 
+  const { tsChecker = !!tsOptions.transpileOnly } = siteConfig
   if (tsChecker) {
     config
       .plugin('fork-ts-checker')
       .use(require('fork-ts-checker-webpack-plugin'), [Object.assign({
-        tsconfig: tsConfig.configFile || path.resolve(sourceDir, './tsconfig.json'),
+        tsconfig: tsOptions.configFile || path.resolve(sourceDir, './tsconfig.json'),
         vue: true
       }, tsChecker)])
   }
