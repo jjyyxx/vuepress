@@ -30,6 +30,7 @@ module.exports = function createBaseConfig ({
 
   const isProd = process.env.NODE_ENV === 'production'
   const inlineLimit = 10000
+  const libDir = path.join(__dirname, '..')
 
   const config = new Config()
 
@@ -58,7 +59,7 @@ module.exports = function createBaseConfig ({
       .set('@internal', path.resolve(tempPath, 'internal'))
       .end()
     .extensions
-    .merge(['.js', '.ts', '.jsx', /* , '.tsx' */ '.vue', '.json', '.styl']) // TODO: jsx and tsx?
+    .merge(['.js', '.ts', '.jsx', '.tsx', '.vue', '.json', '.styl'])
     .end()
     .modules
       .merge(modulePaths)
@@ -123,6 +124,30 @@ module.exports = function createBaseConfig ({
       .loader('pug-plain-loader')
       .end()
 
+  const jsRule = config.module
+    .rule('js')
+      .test(/\.jsx?$/)
+      .exclude.add(filePath => {
+        // Always transpile lib directory
+        if (filePath.startsWith(libDir)) {
+          return false
+        }
+        // always transpile js in vue files
+        if (/\.vue\.js$/.test(filePath)) {
+          return false
+        }
+        // Don't transpile node_modules
+        return /node_modules/.test(filePath)
+      }).end()
+
+  const tsRule = config.module
+    .rule('ts')
+      .test(/\.tsx?$/)
+      .exclude.add(filePath => {
+        // Don't transpile node_modules
+        return /node_modules/.test(filePath)
+      }).end()
+
   function applyTranspilePipeline (rule) {
     rule
       .use('cache-loader')
@@ -142,51 +167,30 @@ module.exports = function createBaseConfig ({
           configFile: false,
           presets: [
             require.resolve('@vue/babel-preset-app')
+            // TODO: support jsx without polyfill other js syntaxes when evergreen
+            // siteConfig.evergreen
+            //   ? require.resolve('@vue/babel-preset-jsx')
+            //   : require.resolve('@vue/babel-preset-app')
           ]
         })
+        .end()
   }
 
-  const tsRule = config.module
-    .rule('ts')
-      .test(/\.ts$/)
-
-  if (!siteConfig.evergreen) {
-    const libDir = path.join(__dirname, '..')
-    const jsRule = config.module
-      .rule('js')
-        .test(/\.js$/)
-        .exclude.add(filePath => {
-          // Always transpile lib directory
-          if (filePath.startsWith(libDir)) {
-            return false
-          }
-          // always transpile js in vue files
-          if (/\.vue\.js$/.test(filePath)) {
-            return false
-          }
-          // Don't transpile node_modules
-          return /node_modules/.test(filePath)
-        }).end()
-    applyTranspilePipeline(jsRule)
-    applyTranspilePipeline(tsRule)
-  }
+  applyTranspilePipeline(jsRule)
+  applyTranspilePipeline(tsRule)
 
   const tsOptions = {
     transpileOnly: isProd && !!env.isDebug,
     ...siteConfig.ts
   }
-  const { compilerOptions = {}} = tsOptions
-  delete tsOptions.compilerOptions
 
   tsRule
     .use('ts-loader')
       .loader('ts-loader')
       .options({
+        context: sourceDir,
         appendTsSuffixTo: [/\.vue$/],
-        compilerOptions: {
-          module: 'esnext',
-          ...compilerOptions
-        },
+        compilerOptions: { module: 'esnext' },
         ...tsOptions
       })
 
