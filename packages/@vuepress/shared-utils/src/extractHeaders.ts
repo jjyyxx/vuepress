@@ -12,7 +12,7 @@ import deeplyParseHeaders from './deeplyParseHeaders'
 
 const cache = new LRU({ max: 1000 })
 
-export = function (content: string, include = [], md: any) {
+export default function (content: string, include = [], md: any) {
   const key = content + include.join(',')
   const hit = cache.get(key)
   if (hit) {

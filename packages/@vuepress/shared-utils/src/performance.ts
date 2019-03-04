@@ -27,4 +27,4 @@ class Performance {
   }
 }
 
-export = new Performance()
+export default new Performance()

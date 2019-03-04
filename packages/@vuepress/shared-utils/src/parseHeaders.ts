@@ -29,4 +29,4 @@ const parseHeaders: (v: string) => string = compose(
   trim
 )
 
-export = parseHeaders
+export default parseHeaders

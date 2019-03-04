@@ -14,4 +14,4 @@ class ENV {
   }
 }
 
-export = new ENV()
+export default new ENV()

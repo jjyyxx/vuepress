@@ -106,5 +106,5 @@ class Logger {
  * Expose a logger instance.
  */
 
-export = new Logger()
+export default new Logger()
 

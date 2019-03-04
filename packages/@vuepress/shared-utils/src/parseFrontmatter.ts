@@ -1,4 +1,4 @@
-export = function parseFrontmatter (content: string) {
+export default function parseFrontmatter (content: string) {
   const matter = require('gray-matter')
   const toml = require('toml')
 

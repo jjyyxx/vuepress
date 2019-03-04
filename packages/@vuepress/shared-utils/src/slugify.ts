@@ -7,7 +7,7 @@ import { remove as removeDiacritics } from 'diacritics'
 const rControl = /[\u0000-\u001f]/g
 const rSpecial = /[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'<>,.?/]+/g
 
-export = function slugify (str: string): string {
+export default function slugify (str: string): string {
   return removeDiacritics(str)
   // Remove control characters
     .replace(rControl, '')
